@@ -1,0 +1,12 @@
+# QUADRATIC DISCRIMINANT ANALYSIS(QDA)
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+qda_model = QuadraticDiscriminantAnalysis()
+qda_model.fit(X_train, y_train)
+y_pred_qda = qda_model.predict(X_test)
+print(f"QDA Accuracy: {accuracy_score(y_test, y_pred_qda):.4f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred_qda))
+from sklearn.metrics import confusion_matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print(conf_matrix)

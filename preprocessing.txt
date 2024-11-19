@@ -1,0 +1,63 @@
+#PREPROCESSING
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+data = pd.read_csv('D:\\23ADR077\\BrainTumorData.csv')
+data = data.drop(columns=['id'])
+label_encoder = LabelEncoder()
+data['diagnosis'] = label_encoder.fit_transform(data['diagnosis'])
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(data.drop(columns=['diagnosis']))
+scaled_data = pd.DataFrame(scaled_features, columns=data.columns[1:])
+scaled_data['diagnosis'] = data['diagnosis']
+print(scaled_data.head())
+print("Data Head:")
+print(data.head())
+print("\nData Info:")
+print(data.info())
+
+print("\nMissing values:")
+print(data.isnull().sum())
+
+#REMOVING HIGHLY CORRELATED FEATURES
+import numpy as np
+correlation_matrix = scaled_data.corr().abs()
+upper_triangle = correlation_matrix.where(np.triu(np.ones(correlation_matrix.shape), k=1).astype(bool))
+high_correlation_features = [column for column in upper_triangle.columns if any(upper_triangle[column] > 0.9)]
+reduced_data = scaled_data.drop(columns=high_correlation_features)
+print("Dropped highly correlated features:", high_correlation_features)
+
+
+# OUTLIER DETECTION AND REMOVAL
+from scipy import stats
+z_scores = np.abs(stats.zscore(reduced_data.drop(columns=['diagnosis'])))
+reduced_data_no_outliers = reduced_data[(z_scores < 3).all(axis=1)]
+print("Number of rows after outlier removal:", len(reduced_data_no_outliers))
+
+
+#DIMENSIONALITY REDUCTION WITH PCA
+from sklearn.decomposition import PCA
+# Applying PCA to retain 95% of the variance
+pca = PCA(0.95)
+pca_features = pca.fit_transform(reduced_data_no_outliers.drop(columns=['diagnosis']))
+pca_data = pd.DataFrame(pca_features)
+pca_data['diagnosis'] = reduced_data_no_outliers['diagnosis'].values
+print("Number of features after PCA:", pca_data.shape[1])
+
+
+#HANDLING CLASS IMBALANCE WITH SMOTE
+from imblearn.over_sampling import SMOTE
+X = pca_data.drop(columns=['diagnosis'])
+y = pca_data['diagnosis']
+smote = SMOTE(random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X, y)
+balanced_data = pd.DataFrame(X_resampled)
+balanced_data['diagnosis'] = y_resampled
+print("Number of samples after SMOTE:", balanced_data.shape[0])
+
+
+
+
+
+
+
+
+
